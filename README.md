@@ -1,70 +1,77 @@
-# Getting Started with Create React App
+# React18
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 变更
 
-## Available Scripts
+### IE 兼容性问题
 
-In the project directory, you can run:
+react@18 不再支持 IE11，需要兼容 IE 的请使用 react@17
 
-### `yarn start`
+### createRoot
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+react-dom@18 提供了 2 个根 API，一个是老的 ReactDOM.render(), 一个是新的 ReactDOM.createRoot()。
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+> react-dom.development.js:86 Warning: ReactDOM.render is no longer supported in React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://reactjs.org/link/switch-to-createroot
 
-### `yarn test`
+``` jsx
+// 老的写法
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+ReactDOM.render(<App />, document.getElementById('root'));
+```
 
-### `yarn build`
+``` jsx
+// 新的写法
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### StrictMode
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### setState
 
-### `yarn eject`
+### flushSync
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 已卸载的组件更新状态警告
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 组件返回 null
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 服务器渲染
+## 新的 API
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### useSyncExternalStore
 
-## Learn More
+### useInsertionEffect
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### useId
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### useDeferredValue
 
-### Code Splitting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Concurrent Mode
 
-### Analyzing the Bundle Size
+### useTransition
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Suspense
 
-### Making a Progressive Web App
+## v18 还未正式发布的新特性
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Server Component
 
-### Advanced Configuration
+### OffScreen
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Deployment
+参考：
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+* https://reactjs.org/blog/2022/03/29/react-v18.html
+* https://juejin.cn/post/7087486984146878494
+* https://juejin.cn/post/7078511027091931167
