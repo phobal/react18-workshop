@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import SetStateDemo from './SetStateDemo';
+import Error from './Error'
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <button onClick={onClick}>测试 rerender</button>
         <br />
         <SetStateDemo />
+        {!flag && <Error />}
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
