@@ -1,20 +1,29 @@
 import { useState } from 'react';
+import { flushSync } from 'react-dom'
 import logo from './logo.svg';
+import SetStateDemo from './SetStateDemo';
 import './App.css';
 
 function App() {
-  let [count, setCount] = useState(0)
+  const [count, setCount] = useState(0)
   const [flag, setFlag] = useState(false)
   const onClick = () => {
-    Promise.resolve().then(() => {
-      setCount(count++)
+    flushSync(() => {
+      setCount(c => c + 1)
+      // 包在 promise 中又会变为批处理了
+      // Promise.resolve().then(() => {
+      //   setCount(c => c + 1)
+      // })
     })
+    console.log('---count----', count)
     setFlag(!flag)
   }
   return (
     <div className="App">
       <header className="App-header">
         <button onClick={onClick}>测试 rerender</button>
+        <br />
+        <SetStateDemo />
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.

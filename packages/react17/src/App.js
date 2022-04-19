@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import logo from './logo.svg';
+import SetStateDemo from './SetStateDemo';
 import './App.css';
 
 function App() {
@@ -15,6 +16,8 @@ function App() {
     <div className="App">
       <header className="App-header">
         <button onClick={onClick}>测试 rerender</button>
+        <br />
+        <SetStateDemo />
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
