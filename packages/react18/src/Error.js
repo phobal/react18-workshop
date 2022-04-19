@@ -10,7 +10,7 @@ const Error = () => {
       window.removeEventListener('resize', resizeHandle)
     }
   })
-  return <p style={{ color: 'red' }}>error text</p>
+  return undefined
 }
 
 export default Error

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, Suspense } from 'react';
 import logo from './logo.svg';
 import SetStateDemo from './SetStateDemo';
 import Error from './Error'
@@ -19,7 +19,9 @@ function App() {
         <button onClick={onClick}>测试 rerender</button>
         <br />
         <SetStateDemo />
-        {!flag && <Error />}
+        <Suspense fallback={undefined}>
+          <Error />
+        </Suspense>
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
