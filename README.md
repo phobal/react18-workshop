@@ -149,6 +149,48 @@ const Demo = () => {
 * React18 Suspense fallback 会出现 undefined 的情况，为了保证 fallback 为 undefined 而不报错，故删除了这个警告。
 * TS 类型系统和 ESLint 已经比较健壮了，这类错误可以在写代码的时候就会有提醒，完全可以避免掉这类问题。
 
+### Children
+
+children 属性从 React.FunctionComponent (即 React.FC) 中移除了，需要显示定义
+
+18 之前
+
+``` tsx
+import * as React from 'react';
+
+type Props = {};
+
+const Component: React.FC<Props> = ({children}) => {...}
+
+```
+
+18 之后
+
+``` tsx
+type Props = {
+  children?: React.ReactNode
+};
+const Component: React.FC<Props> = ({children}) => {...}
+```
+
+18 之后必须对 children 进行定义
+
+**为什么要移除这个呢？**
+
+看下面的例子：
+
+``` tsx
+const ComponentWithNoChildren: React.FC = () => <>Hello</>;
+
+<ComponentWithNoChildren>
+   // 传入了多余的 children，实际上父组件并没有 children, 但是在 18 之前也不会报错
+   <UnusedChildrenSinceComponentHasNoChildren />
+</ComponentWithNoChildren>
+
+```
+
+更多参见：https://solverfox.dev/writing/no-implicit-children/
+
 ### 服务器渲染
 ## 新的 API
 
