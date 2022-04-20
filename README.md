@@ -192,13 +192,115 @@ const ComponentWithNoChildren: React.FC = () => <>Hello</>;
 更多参见：https://solverfox.dev/writing/no-implicit-children/
 
 ### 服务器渲染
-## 新的 API
+## 提供给第三方库用的 API
 
 ### useSyncExternalStore
 
+**语法**
+
+``` jsx
+
+const state = useSyncExternalStore(subscribe, getSnapshot[, getServerSnapshot]);
+
+```
+
+**应用场景**
+
+useSyncExternalStore 能够让 React 组件在 Concurrent Mode 下安全地有效地读取外接数据源。
+
+示例代码：
+
+``` tsx
+import { useMemo, useSyncExternalStore } from 'react';
+
+function useInnerWidth(): number {
+  // 保持 subscribe 固定引用，避免 resize 监听器重复执行
+  const [subscribe, getSnapshot] = useMemo(() => {
+    return [
+      (notify: () => void) => {
+        // 真实情况这里会用到节流
+        window.addEventListener('resize', notify);
+        return () => {
+          window.removeEventListener('resize', notify);
+        };
+      },
+      // 返回 resize 后需要的快照
+      () => window.innerWidth,
+    ];
+  }, []);
+  return useSyncExternalStore(subscribe, getSnapshot);
+}
+```
+
+``` tsx
+function WindowInnerWidthExample() {
+  const width = useInnerWidth();
+
+  return <p>宽度: {width}</p>;
+}
+```
+
+在 Concurrent Mode 下，React 一次渲染会分片执行（以 fiber 为单位），中间可能穿插优先级更高的更新。假如在高优先级的更新中改变了公共数据（比如 redux 中的数据），那之前低优先的渲染必须要重新开始执行，否则就会出现前后状态不一致的情况。
+
+主要是给一些框架使用的，日常业务应该使用不到这个，具体可以参考:https://github.com/reactwg/react-18/discussions/70
+
 ### useInsertionEffect
 
+**语法**
+
+``` jsx
+useInsertionEffect(didUpdate)
+```
+类似 useLayoutEffect, 但有些许不同，
+* 它不能在 useInsertionEffect 中去访问 DOM 的 ref
+* 执行时机是在 useLayoutEffect 之前，DOM 生成之后
+
+**应用场景**
+
+基于上面提到的第二点，它不能直接去操作 DOM，所以它只能够做一些插入 <style> 脚本的工作，  
+所以该 API 主要是给 css-in-js 框架用的。
+
+示例代码：
+
+``` jsx
+function useCSS(rule) {
+  useInsertionEffect(() => {
+    if (!isInserted.has(rule)) {
+      isInserted.add(rule);
+      document.head.appendChild(getStyleForRule(rule));
+    }
+  });
+  return rule;
+}
+function Component() {
+  let className = useCSS(rule);
+  return <div className={className} />;
+}
+```
 ### useId
+
+**语法**
+
+``` jsx
+const id = useId();
+```
+**应用场景**
+
+一般用于服务器端渲染，支持在服务器端和客户端生成唯一的 ID，同时避免 `hydration` 的不兼容。
+
+使用示例：
+
+``` jsx
+function Checkbox() {
+  const id = useId();
+  return (
+    <div>
+      <label htmlFor={id}>选择框</label>
+      <input type="checkbox" name="sex" id={id} />
+    </div>
+  );
+}
+```
 
 ### useDeferredValue
 

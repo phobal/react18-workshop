@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { flushSync } from 'react-dom'
 import logo from './logo.svg';
 import SetStateDemo from './SetStateDemo';
@@ -8,6 +8,8 @@ import './App.css';
 function App() {
   const [count, setCount] = useState(0)
   const [flag, setFlag] = useState(false)
+  const id = useId()
+  console.log('---id----', id)
   const onClick = () => {
     flushSync(() => {
       setCount(c => c + 1)
