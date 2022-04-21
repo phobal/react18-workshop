@@ -302,14 +302,66 @@ function Checkbox() {
 }
 ```
 
-### useDeferredValue
-
-
 ## Concurrent Mode
+![](./docs/images/old-render.png)
 
+之前 React 的状态改变了，会立即准备虚拟 DOM，然后渲染真实的 DOM，整个流程是串行的，一旦开始触发更新，十头牛都拉不回来，只能等流程完全结束，期间是无法中断的。
+
+![](./docs/images/concurrent.png)
+
+而在 Concurrent 模式下，React 的执行过程中，每一次更新都会生成一个 Fiber, 在执行 Fiber 时会先去 check 一下有没有更高优先级的更新，如果有，则当前低优先级的更新会被暂停，等高优先级的任务执行完成之后再继续执行或者重新执行。
+
+举个例子来理解 concurrent 模式。假设你正在吃饭，结果突然线上出了个紧急 bug。在 React18 之前你只能让产品经理等你把饭吃完了才能给他处理，而 React18 之后你可以先放下饭碗，先去吃 bug 处理了再来吃饭。
+
+对于我们做业务的开发者来说，我们对 concurrent 的感知很弱，升级后我们的代码不需要做任何改动就能让应用变得很快。
+
+那我们开发者应该关心基于 concurrent 模式的上层功能，比如：startTransition、useTransition、Suspense 等
+
+### startTransition
+
+对于非紧急的更新可以用 startTransition 给包裹起来，等你认为优先级更高的认为先处理（注意： 这里的优先级跟 react 内部控制的优先级不一样）
+
+``` jsx
+import { setRenderValue } from 'react'
+// 紧急的
+setInputValue(e.target.value);
+// 非紧急的，对于渲染比较耗时的可以手动控制延迟渲染，先让最用户关心的内容渲染
+startTransition(() => {
+  setRenderValue(e.target.value / 1);
+});
+
+```
+
+那如果我们想让这个耗时的渲染在准备 virtual DOM 的期间给用户一个比较友好的提示，比如加个 loading 应该怎么做呢？这个 loading 应该什么时候显示、什么时候消失呢？这个就需要使用另外一个 API —— useTransition
 ### useTransition
 
-### Suspense
+``` jsx
+const [loading, startTransition] = useTransition()
+```
+
+loading 就是 startTransition 包裹的状态值的 virtual DOM 的准备过程状态
+
+``` jsx
+import { useTransition } from 'react'
+
+const [loading, startTransition] = useTransition()
+// 紧急的
+setInputValue(e.target.value);
+// 非紧急的，对于渲染比较耗时的可以手动控制延迟渲染，先让最用户关心的内容渲染
+startTransition(() => {
+  setRenderValue(e.target.value / 1);
+});
+```
+
+### useDeferredValue
+
+```jsx
+const renderValue = useDeferredValue(value)
+```
+**`useDeferredValue = useEffect + transition`**
+
+useDeferredValue 本质上和内部实现与 useTransition  一样都是标记成了过渡更新任务, 只不过 useTransition 是把 startTransition 内部的更新任务变成了 transition, 体现的是一个过程，而 useDeferredValue 是一个值，这个值是一个延时状态。一个是处理一段逻辑，另一个是产生一个新的状态。
+
 
 ## v18 还未正式发布的新特性
 
