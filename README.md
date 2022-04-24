@@ -113,22 +113,22 @@ onClick = () => {
 
 ### 已卸载的组件更新状态警告
 
-![](./docs/images/react-error.png)
-
-原本 react 想对如下情况进行内存泄露提醒
+在 React17 版本如下代码
 
 ``` jsx
-useEffect(() => {
-  function handleChange() {
-    setState(store.getState());
-  }
-  store.subscribe(handleChange);
-  // 未取消订阅的时候会抛出错误
-  // return () => store.unsubscribe(handleChange);
-}, []);
+async function handleSubmit() {
+  setPending(true)
+  await post('/someapi') // component might unmount while we're waiting
+  setPending(false)
+}
 ```
+假如我们在请求过程中卸载了组件，就会报如下错误
 
-但是实际上应用中很少出现上面的情况，所以在 18 中移除了这个警告
+![](./docs/images/react-error.png)
+
+
+在 React18 中已经删除了这个警告，为什么删掉呢？后面解释
+
 ### 组件返回 null
 
 在 React18 之前, 这样写
