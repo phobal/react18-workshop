@@ -505,6 +505,74 @@ function Note({id}) {
 
 ### OffScreen
 
+OffScreen 目前也在开发中，会在未来某个版本发布。OffScreen 支持只保存组件的状态，而删除组件的 UI 部分。可以很方便的实现预渲染，或者 Keep Alive。比如我们在从 tabA 切换到 tabB，再返回 tabA 时，React 会使用之前保存的状态恢复组件。
+
+为了支持这个能力，React 要求我们的组件对多次安装和销毁具有弹性。那什么样的代码不符合弹性要求呢？其实不符合要求的代码很常见。
+
+``` tsx
+async function handleSubmit() {
+  setPending(true)
+  await post('/someapi') // component might unmount while we're waiting
+  setPending(false)
+}
+```
+是不是很熟悉？没错就是上面 #已卸载的组件更新状态警告 举的例子，当时留下了一个问题，为什么删除了这个警告？
+在回答这个问题前我们先来解决下，在 react17 中怎么规避上面的警告？很简单，只需要一个 unmountRef 来标记一下当前组件是否卸载了。
+
+``` tsx
+function SomeButton(){
+  const [pending, setPending] = useState(false)
+  const unmountRef = useUnmountedRef();  // 这个 hooks 来自于 ahooks 库
+
+  async function handleSubmit() {
+    setPending(true)
+    await post('/someapi')
+    if (!unmountRef.current) {
+      setPending(false)
+    }
+  }
+
+  return (
+    <Button onClick={handleSubmit} loading={pending}>
+      提交
+    </Button>
+  )
+}
+
+```
+我们来模拟执行一次组件，看看组件的变化状态：
+
+* 首次加载时，组件的状态为：pending = false
+* 点击按钮后，组件的状态会变为：pending = true
+* 假如我们在请求过程中卸载了组件，那此时的状态会变为：pending = true
+
+在 OffScreen 中，React 会保存住最后的状态，下次会用这些状态重新渲染组件。惨了，此时我们发现重新渲染组件一直在 loading。
+
+怎么解决？解决办法很简单，就是回归最初的代码，删掉 unmountRef的逻辑。至于「内存泄漏」的警告，React 18 删除了，因为这里不存在内存泄漏
+
+``` tsx
+async function handleSubmit() {
+  setPending(true)
+  await post('/someapi') // component might unmount while we're 、、、/// waiting
+  setPending(false)
+}
+```
+
+OffScreen 使用方法
+
+``` tsx
+import { OffScreen } from 'react'
+
+// render
+<OffScreen>
+  <List>
+    {
+      list.map(l => (<ListItem onClick={() => gotoDetail(l.id)} />))
+    }
+  </List>
+</OffScreen>
+```
+从 ListItem 到 Detail, 再从 Detail 回到 List 时，List 会保持之前的状态，可以实现 KeepAlive 的功能。
 
 参考：
 
