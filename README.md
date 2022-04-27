@@ -191,7 +191,100 @@ const ComponentWithNoChildren: React.FC = () => <>Hello</>;
 
 更多参见：https://solverfox.dev/writing/no-implicit-children/
 
-### 服务器渲染
+### 服务器流式渲染
+
+SSR 页面一次渲染的大致流程为：
+1. 服务端 fetch 页面所有的数据
+2. 数据准备好之后，将组件渲染成 string 的形式作为 response 返回
+3. 客户端加载资源
+4. 客户端合成(hydrate)最终的页面内容
+
+在传统的 SSR 模式中，上述流程是串行执行的，如果其中有一步比较慢的话都会影响到整体的渲染速度。
+
+而在 React18 中，基于全新的 Suspense, 支持了流式的 SSR，也就是允许服务端一点一点的返回页面。
+
+* React17:
+
+``` tsx
+<Layout>
+  <Header />
+  <Sidebar />
+  <RightPane>
+    <Article />
+    <Comments />
+  </RightPane>
+</Layout>
+```
+
+渲染后为
+
+``` html
+<main>
+  <header>
+    <!--Header -->
+    <a href="/">Home</a>
+   </header>
+  <aside>
+    <!-- Sidebar -->
+    <a href="/profile">Profile</a>
+  </aside>
+  <article>
+    <!-- Article -->
+    <p>Hello world</p>
+  </article>
+  <section>
+    <!-- Comments -->
+    <p>First comment</p>
+    <p>Second comment</p>
+  </section>
+</main>
+```
+
+* React18:
+
+通过 <Suspense> 包裹 <Comments> 组件，使之成为流式渲染
+
+``` tsx
+const Comments = React.lazy(() => import('./Comments'))
+
+// render
+<Layout>
+  <Header />
+  <Sidebar />
+  <RightPane>
+    <Article />
+      <Suspense feedback={<Loading />}>
+        <Comments />
+      </Suspense>
+  </RightPane>
+</Layout>
+```
+
+在 Comments 组件还没渲染好时吐给前端的代码为
+
+``` html
+<main>
+  <header>
+    <!--Header -->
+    <a href="/">Home</a>
+   </header>
+  <aside>
+    <!-- Sidebar -->
+    <a href="/profile">Profile</a>
+  </aside>
+  <article>
+    <!-- Article -->
+    <p>Hello world</p>
+  </article>
+  <section>
+    <!-- Loading -->
+    <img width=400 src="loading.gif" />
+  </section>
+</main>
+```
+当 <Comments> 组件准备好之后，React 会通过同一个流（stream）发送给浏览器（res.send 替换为 res.socket），并替换为相应的位置。
+
+![](./docs/images/ssr.png)
 ## 提供给第三方库用的 API
 
 ### useSyncExternalStore
@@ -366,6 +459,49 @@ useDeferredValue 本质上和内部实现与 useTransition  一样都是标记�
 ## v18 还未正式发布的新特性
 
 ### Server Component
+
+也叫服务端组件，目前(2022/04/27)还在开发中, 还没正式发布
+
+![](./docs/images/server-components.png)
+
+Server Component 的本质就是由服务端生成 React 组件，返回一个 DSL 给客户端，客户端解析 DSL 并渲染该组件。
+
+Server Component 带来的优势有：
+
+1. **零客户端体积**，运行在服务端的组件只会返回最终的 DSL 信息，而不包含其他任何依赖。
+
+``` tsx
+// NoteWithMarkdown.js
+import marked from 'marked'; // 35.9K (11.2K gzipped)
+import sanitizeHtml from 'sanitize-html'; // 206K (63.3K gzipped)
+
+function NoteWithMarkdown({text}) {
+  const html = sanitizeHtml(marked(text));
+  return (/* render */);
+}
+```
+假设我们有一个 markdown 渲染组件，以前我们需要将依赖 marked和 sanitize-html打包到 JS 中。如果该组件在服务端运行，则最终返回给客户端的是转换完成的文本。
+
+2. **组件拥有完整的服务端能力** 由于 Server Component 在服务端执行，拥有了完整的 NodeJS 的能力，可以访问任何服务端 API。
+
+``` tsx
+// Note.server.js - Server Component
+import fs from 'react-fs';
+
+function Note({id}) {
+  const note = JSON.parse(fs.readFile(`${id}.json`));
+  return <NoteWithMarkdown note={note} />;
+}
+```
+
+3. **组件支持实时更新** 由于 Server Component 在服务端执行，理论上支持实时更新，类似动态 npm 包，这个还是有比较大的想象空间的。也许 React Component as a service 时代来了。
+
+
+当然说了这么多好处，Server Component 肯定也是有一些局限性的：
+
+* 不能有状态，也就是不能使用 state、effect 等，那么更适合用在纯展示的组件，对性能要求较高的一些前台业务
+* 不能访问浏览器的 API
+* props 必须能被序列化
 
 ### OffScreen
 
