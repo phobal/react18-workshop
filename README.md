@@ -415,7 +415,7 @@ function Checkbox() {
 对于非紧急的更新可以用 startTransition 给包裹起来，等你认为优先级更高的认为先处理（注意： 这里的优先级跟 react 内部控制的优先级不一样）
 
 ``` jsx
-import { setRenderValue } from 'react'
+import { startTransition } from 'react'
 // 紧急的
 setInputValue(e.target.value);
 // 非紧急的，对于渲染比较耗时的可以手动控制延迟渲染，先让最用户关心的内容渲染
