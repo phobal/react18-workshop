@@ -129,7 +129,7 @@ async function handleSubmit() {
 
 在 React18 中已经删除了这个警告，为什么删掉呢？后面解释
 
-### 组件返回 null
+### 组件返回 undefined
 
 在 React18 之前, 这样写
 
@@ -412,7 +412,7 @@ function Checkbox() {
 
 ### startTransition
 
-对于非紧急的更新可以用 startTransition 给包裹起来，等你认为优先级更高的认为先处理（注意： 这里的优先级跟 react 内部控制的优先级不一样）
+对于非紧急的更新可以用 startTransition 给包裹起来，等你认为优先级更高的先处理（注意： 这里的优先级跟 react 内部控制的优先级不一样）
 
 ``` jsx
 import { startTransition } from 'react'
